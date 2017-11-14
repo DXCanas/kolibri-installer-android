@@ -1,3 +1,6 @@
+# Specify where to look for keystores, apk
+vpath %.keystore /home/david/keystores
+vpath %.apk ./bin
 
 # Clear out apks
 .PHONY: clean
@@ -39,6 +42,11 @@ builddebugapk:
 buildreleaseapk:
 	buildozer android release
 
+# Creates a keystore in user's home directory (away from this repo)
+kolibri.keystore:
+	# QUESTION best practices for specifying develop vs release?
+	mkdir -p ~/keystores
+	keytool -genkey -v -keystore ~/keystores/$@ -alias kolibri -keyalg RSA -keysize 2048 -validity 10000
 
 # DOCKER BUILD
 
