@@ -57,8 +57,4 @@ COPY src  src/
 
 # Extract .whl files and build the apk
 RUN chown kivy:kivy /home/kivy/src && \
-  su kivy -c "\
-    make replaceloadingpage && \
-    make extractkolibriwhl && \
-    make generateversion && \
-    make builddebugapk"
+  su kivy -c "make debugapk"
