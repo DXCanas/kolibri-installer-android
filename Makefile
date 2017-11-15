@@ -14,9 +14,8 @@ vpath %.apk $(apk_path)
 ## Clear out apks
 .PHONY: clean
 clean:
-	# Make bin directory, where APK is held. Empty if it exists.
-	mkdir -p bin
-	rm -f bin/*.apk 2> /dev/null
+	mkdir -p $(apk_path)
+	rm -f $(apk_path)/*.apk 2> /dev/null
 	rm -rf ./src/kolibri 2> /dev/null
 
 ## Update build system (download NDK/SDK, build Python, etc)
@@ -44,16 +43,26 @@ generateversion:
 
 # APK SIGNING
 
-# Creates a keystore in user's home directory (away from this repo)
-kolibri.keystore:
-	# QUESTION best practices for specifying develop vs release?
-	mkdir -p ~/keystores
-	keytool -genkey -v -keystore ~/keystores/$@ -alias kolibri -keyalg RSA -keysize 2048 -validity 10000
 
 ## Creates a keystore in user's home directory
 debug.keystore:
 	mkdir -p $(keystore_path)
 	keytool -genkey -v -keystore $(keystore_path)/$@ -alias debug -keyalg RSA -keysize 2048 -validity 10000
+
+## Checks for keystore in user's home directory. Always use LE's official key.
+release.keystore: # NOTE assumes file name. May need to change this.
+
+## Creates debug apk if none is found
+%-debug.apk: debugapk ;
+
+## Recipe for a signed debug apk.
+## Note: release not necessary, built into buildozer(?), which achieves same the env vars
+.PHONY: signeddebugapk
+signeddebugapk: %-debug.apk | debug.keystore $(build_tools_path)
+	### Will prompt for debug password
+	jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $(word 2, $^) $< debug
+	### Replacing unsigned APK with signed APK
+	$(build_tools_path)/zipalign -v 4 $< $<
 
 
 # APK BUILDING
